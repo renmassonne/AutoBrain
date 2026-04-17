@@ -1,18 +1,5 @@
 import type { GenUISchema, InputValues, OutputValues } from "@/types/schema";
-
-const SAFE_FUNCTIONS: Record<string, Function> = {
-  min: Math.min,
-  max: Math.max,
-  abs: Math.abs,
-  round: Math.round,
-  floor: Math.floor,
-  ceil: Math.ceil,
-  pow: Math.pow,
-  sqrt: Math.sqrt,
-  SUM: (...args: number[]) => args.reduce((a, b) => a + b, 0),
-};
-
-const SAFE_FUNC_NAMES = new Set(Object.keys(SAFE_FUNCTIONS));
+import { SAFE_FUNCTIONS, SAFE_FUNC_NAMES } from "@/lib/safeFunctions";
 
 /**
  * Safely evaluate a math expression.

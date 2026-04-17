@@ -4,13 +4,9 @@
  * an empty "Quick start" area. For the normal happy path, suggestions are
  * AI-curated by the API.
  */
-export interface Suggestion {
-  title: string;
-  description: string;
-  prompt: string;
-  category: string;
-  icon: string;
-}
+import type { Suggestion } from "@/lib/suggestionMeta";
+
+export type { Suggestion };
 
 export const FALLBACK_SUGGESTIONS: Suggestion[] = [
   {

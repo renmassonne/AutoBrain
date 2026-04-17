@@ -1,73 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  Wallet,
-  Heart,
-  Landmark,
-  ArrowLeftRight,
-  Receipt,
-  PiggyBank,
-  Calculator,
-  TrendingUp,
-  Clock,
-  Ruler,
-  Thermometer,
-  Car,
-  Home,
-  ShoppingCart,
-  Percent,
-  Timer,
-  Gauge,
-  Zap,
-  Beaker,
-  Briefcase,
-  Sparkles,
-  RefreshCw,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Wallet,
-  Heart,
-  Landmark,
-  ArrowLeftRight,
-  Receipt,
-  PiggyBank,
-  Calculator,
-  TrendingUp,
-  Clock,
-  Ruler,
-  Thermometer,
-  Car,
-  Home,
-  ShoppingCart,
-  Percent,
-  Timer,
-  Gauge,
-  Zap,
-  Beaker,
-  Briefcase,
-};
-
-const CATEGORIES = [
-  "All",
-  "Finance",
-  "Health",
-  "Productivity",
-  "Science",
-  "Daily life",
-  "Business",
-] as const;
-
-interface Suggestion {
-  title: string;
-  description: string;
-  prompt: string;
-  category: string;
-  icon: string;
-}
+import {
+  ICON_MAP,
+  TEMPLATE_UI_CATEGORIES,
+  type Suggestion,
+} from "@/lib/suggestionMeta";
 
 interface TemplateCardsProps {
   onSelect: (prompt: string) => void;
@@ -84,7 +24,8 @@ export function TemplateCards({
   const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [category, setCategory] = useState<(typeof CATEGORIES)[number]>("All");
+  const [category, setCategory] =
+    useState<(typeof TEMPLATE_UI_CATEGORIES)[number]>("All");
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1000));
 
   const load = useCallback(
@@ -124,7 +65,7 @@ export function TemplateCards({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap gap-1">
-          {CATEGORIES.map((c) => (
+          {TEMPLATE_UI_CATEGORIES.map((c) => (
             <button
               key={c}
               onClick={() => setCategory(c)}

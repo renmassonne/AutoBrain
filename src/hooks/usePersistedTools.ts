@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { GenUISchema } from "@/types/schema";
-
-const STORAGE_KEY = "autobrain-tools";
-const ACTIVE_KEY = "autobrain-active-index";
+import { TOOL_STORAGE_KEY, ACTIVE_INDEX_KEY } from "@/lib/storageKeys";
 
 export function usePersistedTools() {
   const [tools, setToolsState] = useState<GenUISchema[]>([]);
@@ -13,12 +11,12 @@ export function usePersistedTools() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(TOOL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as GenUISchema[];
         if (Array.isArray(parsed) && parsed.length > 0) {
           setToolsState(parsed);
-          const storedIndex = localStorage.getItem(ACTIVE_KEY);
+          const storedIndex = localStorage.getItem(ACTIVE_INDEX_KEY);
           const idx = storedIndex !== null ? parseInt(storedIndex, 10) : 0;
           setActiveIndexState(idx >= 0 && idx < parsed.length ? idx : 0);
         }
@@ -32,7 +30,7 @@ export function usePersistedTools() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tools));
+      localStorage.setItem(TOOL_STORAGE_KEY, JSON.stringify(tools));
     } catch {
       // storage full — ignore
     }
@@ -41,13 +39,9 @@ export function usePersistedTools() {
   useEffect(() => {
     if (!hydrated) return;
     if (activeIndex !== null) {
-      localStorage.setItem(ACTIVE_KEY, String(activeIndex));
+      localStorage.setItem(ACTIVE_INDEX_KEY, String(activeIndex));
     }
   }, [activeIndex, hydrated]);
-
-  const setTools = useCallback((updater: GenUISchema[] | ((prev: GenUISchema[]) => GenUISchema[])) => {
-    setToolsState(updater);
-  }, []);
 
   const setActiveIndex = useCallback((idx: number | null) => {
     setActiveIndexState(idx);
@@ -108,7 +102,6 @@ export function usePersistedTools() {
     activeIndex,
     activeTool: activeIndex !== null ? tools[activeIndex] ?? null : null,
     hydrated,
-    setTools,
     setActiveIndex,
     addTool,
     updateTool,

@@ -1,4 +1,5 @@
 import type { GenUISchema } from "@/types/schema";
+import { stripCodeBlock } from "@/lib/json";
 
 interface StreamCallbacks {
   onPartial?: (text: string) => void;
@@ -103,9 +104,4 @@ export async function generateStream(
       callbacks.onError("Incomplete response from AI");
     }
   }
-}
-
-function stripCodeBlock(s: string): string {
-  const match = s.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/);
-  return match ? match[1].trim() : s;
 }

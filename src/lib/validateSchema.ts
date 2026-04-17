@@ -1,16 +1,7 @@
 import type { GenUISchema, SchemaInput, SchemaOutput } from "@/types/schema";
+import { SAFE_FUNC_NAMES } from "@/lib/safeFunctions";
 
-export const SAFE_FUNC_NAMES = new Set([
-  "min",
-  "max",
-  "abs",
-  "round",
-  "floor",
-  "ceil",
-  "pow",
-  "sqrt",
-  "SUM",
-]);
+export { SAFE_FUNC_NAMES };
 
 const VALID_INPUT_TYPES = new Set<SchemaInput["type"]>([
   "number",

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { openai } from "@/lib/openai";
+import { jsonError } from "@/lib/json";
 
 const SYSTEM_PROMPT = `You rewrite a user's short or vague tool description into a stronger, more specific prompt that can drive a good calculator/tool schema.
 
@@ -15,22 +14,19 @@ Rules:
 
 export async function POST(request: NextRequest) {
   if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY is not set" },
-      { status: 500 }
-    );
+    return jsonError(500, "OPENAI_API_KEY is not set");
   }
 
   let body: { prompt?: string };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return jsonError(400, "Invalid JSON body");
   }
 
   const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
   if (!prompt) {
-    return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
+    return jsonError(400, "Missing prompt");
   }
 
   try {
@@ -45,26 +41,17 @@ export async function POST(request: NextRequest) {
     });
     const content = completion.choices[0]?.message?.content?.trim() ?? "";
     if (!content) {
-      return NextResponse.json(
-        { error: "Empty response from OpenAI" },
-        { status: 502 }
-      );
+      return jsonError(502, "Empty response from OpenAI");
     }
     const parsed = JSON.parse(content) as { prompt?: unknown };
     const refined =
       typeof parsed.prompt === "string" ? parsed.prompt.trim() : "";
     if (!refined) {
-      return NextResponse.json(
-        { error: "Model returned no prompt" },
-        { status: 502 }
-      );
+      return jsonError(502, "Model returned no prompt");
     }
     return NextResponse.json({ prompt: refined });
   } catch (e) {
     console.error("[refine-prompt] error:", e);
-    return NextResponse.json(
-      { error: "Refinement failed" },
-      { status: 500 }
-    );
+    return jsonError(500, "Refinement failed");
   }
 }

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { openai } from "@/lib/openai";
+import { jsonError } from "@/lib/json";
 import type { GenUISchema } from "@/types/schema";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const SYSTEM_PROMPT = `You propose short, concrete modification ideas for an existing AutoBrain tool. The user will see these as quick-action chips under a "Modify this tool" input.
 
@@ -14,22 +13,19 @@ Rules:
 
 export async function POST(request: NextRequest) {
   if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY is not set" },
-      { status: 500 }
-    );
+    return jsonError(500, "OPENAI_API_KEY is not set");
   }
 
   let body: { schema?: GenUISchema };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return jsonError(400, "Invalid JSON body");
   }
 
   const schema = body.schema;
   if (!schema || typeof schema !== "object" || !schema.title) {
-    return NextResponse.json({ error: "Missing schema" }, { status: 400 });
+    return jsonError(400, "Missing schema");
   }
 
   try {
@@ -47,10 +43,7 @@ export async function POST(request: NextRequest) {
     });
     const content = completion.choices[0]?.message?.content?.trim() ?? "";
     if (!content) {
-      return NextResponse.json(
-        { error: "Empty response from OpenAI" },
-        { status: 502 }
-      );
+      return jsonError(502, "Empty response from OpenAI");
     }
     const parsed = JSON.parse(content) as { suggestions?: unknown };
     const list = Array.isArray(parsed.suggestions) ? parsed.suggestions : [];
@@ -61,9 +54,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ suggestions });
   } catch (e) {
     console.error("[modify-suggestions] error:", e);
-    return NextResponse.json(
-      { error: "Suggestion failed" },
-      { status: 500 }
-    );
+    return jsonError(500, "Suggestion failed");
   }
 }

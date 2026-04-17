@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { jsonError } from "@/lib/json";
 
 /** GET /api/tools — list user's tools (if authenticated) or public tools */
 export async function GET(request: NextRequest) {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return jsonError(401, "Not authenticated");
   }
 
   const tools = await prisma.tool.findMany({
@@ -44,14 +45,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return jsonError(401, "Not authenticated");
   }
 
   let body: { title: string; description?: string; schema: object; isPublic?: boolean };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    return jsonError(400, "Invalid body");
   }
 
   const tool = await prisma.tool.create({

@@ -67,9 +67,9 @@ src/
     layout.tsx
     page.tsx
     globals.css
-  components/        UI, ToolRenderer, ToolChart, TemplateCards, ToolSidebar, etc.
-  hooks/             usePersistedTools.ts
-  lib/               auth, calculator, genPrompt, validateSchema, prisma, streamClient, templates (fallback), utils
+  components/        UI, ToolRenderer, ToolChart, TemplateCards, ToolSidebar, home/*, tool/*
+  hooks/             usePersistedTools, useGenerator, usePromptDraft, useRefinePrompt, useModifyIdeas, useToast
+  lib/               auth, calculator, genPrompt, generateSchema, validateSchema, prisma, streamClient, templates, openai, json, safeFunctions, suggestionMeta, storageKeys, formatOutput, utils
   types/             schema.ts (GenUISchema, chart.series, output currency/locale)
 prisma/schema.prisma
 ```

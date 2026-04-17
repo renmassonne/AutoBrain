@@ -1,66 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-import { FALLBACK_SUGGESTIONS, type Suggestion } from "@/lib/templates";
+import { openai } from "@/lib/openai";
+import { FALLBACK_SUGGESTIONS } from "@/lib/templates";
+import type { Suggestion } from "@/lib/suggestionMeta";
+import {
+  SUGGESTION_CATEGORIES,
+  ALLOWED_ICON_NAMES,
+  buildSuggestionsSystemPrompt,
+  normalizeSuggestionIcon,
+} from "@/lib/suggestionMeta";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-export const SUGGESTION_CATEGORIES = [
-  "Finance",
-  "Health",
-  "Productivity",
-  "Science",
-  "Daily life",
-  "Business",
-] as const;
-
-export type SuggestionCategory = (typeof SUGGESTION_CATEGORIES)[number];
-
-const ALLOWED_ICONS = [
-  "Wallet",
-  "Heart",
-  "Landmark",
-  "ArrowLeftRight",
-  "Receipt",
-  "PiggyBank",
-  "Calculator",
-  "TrendingUp",
-  "Clock",
-  "Ruler",
-  "Thermometer",
-  "Car",
-  "Home",
-  "ShoppingCart",
-  "Percent",
-  "Timer",
-  "Gauge",
-  "Zap",
-  "Beaker",
-  "Briefcase",
-];
-
-const SYSTEM_PROMPT = `You are curating starter ideas for AutoBrain, an app that turns a natural-language prompt into an interactive calculator/tool. Generate short, concrete, varied tool ideas that a real person would actually find useful.
-
-Return ONLY a JSON object in this exact shape:
-{
-  "suggestions": [
-    {
-      "title": "string - 2-4 words, no punctuation at the end",
-      "description": "string - one line, max ~80 chars, describes the benefit",
-      "prompt": "string - the actual prompt we will feed the generator. Write it as the user would, specifying inputs, what to calculate, and (if relevant) a chart.",
-      "category": "one of: Finance | Health | Productivity | Science | Daily life | Business",
-      "icon": "one of the allowed icon names (see list)"
-    }
-  ]
-}
-
-Rules:
-- Return exactly the requested number of suggestions.
-- No duplicates with each other and no duplicates of any titles in the "avoid" list.
-- Prompts must be specific enough to drive a good schema (mention inputs + what to calculate).
-- Prefer useful, everyday tools over gimmicks. Avoid anything requiring external data fetches.
-- "icon" MUST be chosen from this whitelist: [${ALLOWED_ICONS.join(", ")}].
-- If a category filter is given, every suggestion must match it.
-- Return ONLY the JSON object.`;
+const SYSTEM_PROMPT = buildSuggestionsSystemPrompt();
 
 interface CacheEntry {
   suggestions: Suggestion[];
@@ -83,7 +32,7 @@ function normalizeSuggestion(raw: unknown): Suggestion | null {
   const category =
     typeof r.category === "string" ? r.category.trim() : "Daily life";
   const iconRaw = typeof r.icon === "string" ? r.icon.trim() : "";
-  const icon = ALLOWED_ICONS.includes(iconRaw) ? iconRaw : "Sparkles";
+  const icon = normalizeSuggestionIcon(iconRaw);
   if (!title || !description || !prompt) return null;
   return { title, description, prompt, category, icon };
 }
@@ -115,7 +64,6 @@ export async function GET(request: NextRequest) {
   }
 
   if (!process.env.OPENAI_API_KEY) {
-    // Fall back to the static list if no key (dev UX).
     const filtered = filterFallback(FALLBACK_SUGGESTIONS, category, count);
     return NextResponse.json({
       suggestions: filtered,
@@ -137,7 +85,7 @@ export async function GET(request: NextRequest) {
   if (avoid.length > 0) {
     userLines.push(`Avoid these titles: ${avoid.join(", ")}.`);
   }
-  userLines.push(`Allowed icons: ${ALLOWED_ICONS.join(", ")}.`);
+  userLines.push(`Allowed icons: ${ALLOWED_ICON_NAMES.join(", ")}.`);
 
   try {
     const completion = await openai.chat.completions.create({
